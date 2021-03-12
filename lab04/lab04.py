@@ -117,20 +117,27 @@ class ArrayList:
         and enclosed by square brackets. E.g., for a list containing values
         1, 2 and 3, returns '[1, 2, 3]'."""
         ### BEGIN SOLUTION
-        string = "'["
-        if len(lst.data) == 0:
+        string = '['
+        if self.len == 0:
           return '[]'
         else:
-          for item in range(len(lst.data)-1):
-            string = string + str(lst.data[item]) + ','
-          string = string + str(lst.data[len(lst.data)-1]) + "]'"
-          return string
+          for item in range(self.len-1):
+            string = string + str(self.data[item]) + ', '
+          string = string + str(self.data[self.len-1]) + ']'
+        return string
         ### END SOLUTION
 
     def __repr__(self):
         """Supports REPL inspection. (Same behavior as `str`.)"""
         ### BEGIN SOLUTION
-        return __str__(self)
+        string = '['
+        if self.len == 0:
+          return '[]'
+        else:
+          for item in range(self.len-1):
+            string = string + str(self.data[item]) + ', '
+          string = string + str(self.data[self.len-1]) + ']'
+        return string
         ### END SOLUTION
 
 
@@ -139,12 +146,15 @@ class ArrayList:
     def append(self, value):
         """Appends value to the end of this list."""
         ### BEGIN SOLUTION
-        temp = ConstrainedList(self.len+1)
-        for i in range(self.len):
-          temp[i] = self.data[i]
-        temp[self.len] = value
+        if len(self.data) == 0:
+          self.data = ConstrainedList(1)
+        elif len(self.data) <= self.len:
+          temp = ConstrainedList(len(self.data)*2)
+          for i in range(self.len):
+            temp[i] = self.data[i]
+          self.data = temp
+        self.data[self.len] = value
         self.len += 1
-        self.data = temp
         ### END SOLUTION
 
     def insert(self, idx, value):
@@ -152,27 +162,18 @@ class ArrayList:
         list, as needed. Note that inserting a value at len(self) --- equivalent
         to appending the value --- is permitted. Raises IndexError if idx is invalid."""
         ### BEGIN SOLUTION
-        if inx > self.len:
+        if idx > self.len or idx < 0:
           raise IndexError
-        idx = self._normailze_idx(idx)
-        if self.len == 0:
-          regArr = [None]
-          self.data = ConstrainedList.create(regArr)
-          self.data[0] = value
-        elif self.len == idx:
-          self.append(value)
-          self.len -= 1
-        else:
-          if len(self.data) == self.len:
-            regArr = [None]*self.len*2
-          else:
-            regArr = [None]*len(self.data)
-          for i in range(0, idx):
-            regArr[i] = self.data[i-1]
-          regArr[idx] = value
-          for i in range(idx+1, self.len):
-            regArr[i] = self.data[i-1]
-          self.data = ConstrainedList.create(regArr)
+        idx = self._normalize_idx(idx)
+        temp = ConstrainedList(len(self.data))
+        if len(self.data) <= self.len:
+          temp = ConstrainedList(len(self.data)*2)
+        for i in range(0,idx+1):
+          temp[i] = self.data[i]
+        temp[idx] = value
+        for i in range(idx+1, self.len+1):
+          temp[i] = self.data[i-1]
+        self.data = temp
         self.len += 1
         ### END SOLUTION
 
@@ -206,10 +207,12 @@ class ArrayList:
         """Returns True if this ArrayList contains the same elements (in order) as
         other. If other is not an ArrayList, returns False."""
         ### BEGIN SOLUTION
-        if(self.len != other.len):
+        if not isinstance(other, ArrayList):
           return False
-        for i in range(self.len):
-          if(self.data[i] != other.data[i]):
+        if (self.len != other.len):
+          return False
+        for i in range(len(self)):
+          if (self.data[i] != other.data[i]):
             return False
         return True
         ### END SOLUTION
@@ -235,20 +238,20 @@ class ArrayList:
     def min(self):
         """Returns the minimum value in this list."""
         ### BEGIN SOLUTION
-        min = self.data[0]
+        min = self[0]
         for i in range(self.len):
-          if self.data[i] < min:
-            min = self.data[i]
+          if self[i] < min:
+            min = self[i]
         return min
         ### END SOLUTION
 
     def max(self):
         """Returns the maximum value in this list."""
         ### BEGIN SOLUTION
-        max = self.data[0]
+        max = self[0]
         for i in range(self.len):
-          if self.data[i] > max:
-            max = self.data[i]
+          if self[i] > max:
+            max = self[i]
         return max
         ### END SOLUTION
 
@@ -262,7 +265,7 @@ class ArrayList:
           j = self.len
         for x in range(i, j):
           if self.data[x] == value:
-            return self.data[x]
+            return x
         raise ValueError
         ### END SOLUTION
 
@@ -283,13 +286,12 @@ class ArrayList:
         instance that contains the values in this list followed by those
         of other."""
         ### BEGIN SOLUTION
-        newArr = []
+        newArr = ArrayList()
         for i in range(self.len):
           newArr.append(self.data[i])
-        for x in range(other.len):
+        for x in range(len(other.data)):
           newArr.append(other.data[x])
-        newCArr = ArrayList(len(newArr))
-        newCArr.data = ConstrainedList.create(regArr)
+        return newArr
         ### END SOLUTION
 
     def clear(self):
@@ -303,7 +305,7 @@ class ArrayList:
         reglst = []
         for i in range(self.len):
           reglst.append(self.data[i])
-        arrlst = ArrayList()
+        arrlst = ArrayList(len(reglst))
         arrlst.data = ConstrainedList.create(reglst)
         return arrlst
         ### END SOLUTION
@@ -311,13 +313,8 @@ class ArrayList:
     def extend(self, other):
         """Adds all elements, in order, from other --- an Iterable --- to this list."""
         ### BEGIN SOLUTION
-        regArr = []
-        for i in range(self.len):
-          regArr.append(self.data[i])
         for i in range(len(other)):
-          regArr.append(other[i])
-        self.data = ConstrainedList.create(regArr)
-        self.len = len(self.data)
+          self.append(other[i])
         ### END SOLUTION
 
     ### iteration ###
@@ -328,8 +325,8 @@ class ArrayList:
         arr = []
         for i in range(self.len):
           arr.append(self.data[i])
-        iter = arr.__iter__()
-        return iter
+        arrIter = arr.__iter__()
+        return arrIter
         ### END SOLUTION
 
 ################################################################################
