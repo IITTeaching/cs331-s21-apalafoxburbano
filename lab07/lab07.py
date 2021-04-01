@@ -14,18 +14,46 @@ class ExtensibleHashTable:
 
     def find_bucket(self, key):
         # BEGIN_SOLUTION
+        i = key % self.n_buckets
+        while self.buckets[i] != None:
+          if self.buckets[i][0] == key:
+            return i
+          i += 1
+          if(i == self.n_buckets):
+            i = 0
+        return i           
         # END_SOLUTION
 
     def __getitem__(self,  key):
         # BEGIN_SOLUTION
+        i = self.find_bucket(key)
+        if self.buckets[i] != None:
+          return self.buckets[i][1]
+        raise KeyError('Key not in table')
         # END_SOLUTION
 
     def __setitem__(self, key, value):
         # BEGIN_SOLUTION
+        i = self.find_bucket(key)
+        self.buckets[i] = (key,value)
+        self.nitems += 1
+        if(self.nitems > self.fillfactor * self.n_buckets):
+          self.n_buckets *= 2
+          arr = []
+          for j in range(len(self.buckets)):
+            if self.buckets[j] != None:
+              arr.append(self.buckets[j])
+          self.buckets = [None] * (self.n_buckets)
+          for k in arr:
+            i = self.find_bucket(k[0])
+            self.buckets[i] = (k[0],k[1])
         # END_SOLUTION
 
     def __delitem__(self, key):
         # BEGIN SOLUTION
+        key = self.find_bucket(key)
+        self.buckets[key] =None
+        self.nitems -= 1
         # END SOLUTION
 
     def __contains__(self, key):
@@ -43,6 +71,12 @@ class ExtensibleHashTable:
 
     def __iter__(self):
         ### BEGIN SOLUTION
+        arr = []
+        for i in range(len(self.buckets)):
+          if self.buckets[i] != None:
+            arr.append(self.buckets[i][0])
+        it = arr.__iter__()
+        return it
         ### END SOLUTION
 
     def keys(self):
@@ -50,10 +84,22 @@ class ExtensibleHashTable:
 
     def values(self):
         ### BEGIN SOLUTION
+        arr = []
+        for i in range(len(self.buckets)):
+          if self.buckets[i] != None:
+            arr.append(self.buckets[i][1])
+        it = arr.__iter__()
+        return it
         ### END SOLUTION
 
     def items(self):
         ### BEGIN SOLUTION
+        arr = []
+        for i in range(len(self.buckets)):
+          if self.buckets[i] != None:
+            arr.append(self.buckets[i])
+        it = arr.__iter__()
+        return it
         ### END SOLUTION
 
     def __str__(self):
